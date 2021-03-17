@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>网易云音乐播放器</title>
+		<script src="jquery3.5.1.min.js" type="text/javascript" charset="utf-8"></script>
+		<script src="date.js" type="text/javascript" charset="utf-8"></script>
+		<script src="wyy.js" type="text/javascript" charset="utf-8"></script>
+		<link rel="stylesheet" type="text/css" href="wyy.css"/>
+	</head>
+	<style type="text/css">
+		.choosen{
+			background-color: rgba(96,96,96,0.1);
+			z-index: 1;
+		}
+	</style>
+	<body>
+		<div id="container">
+			<nav>
+				<div class="tb"></div>
+				<h3 class="fl navH3">网易云音乐</h3>
+				<input class="fl navInput" type="text" placeholder="搜索" id="search"/>
+				<ul class="navUl">
+					<li style="font-size: 2em;">×</li>
+					<li class="cover">皮肤</li>
+					<li class="regis">登录</li>
+				</ul>
+			</nav>
+			<div id="main">
+				<div class="main">
+					<aside class="leftAside fl">
+						<div id="singer">
+							<img src="" width="200px">
+						</div>
+						<ul class="leftUl">
+							<li><em style="color: #C10D0C;">❤</em> 喜欢</li>
+							<li><em>⭐</em> 收藏</li>
+							<li><em style="color: #666;font-weight: bold;">↓</em> 下载</li>
+							<li><em style="color: #666;font-weight: bold;">↑</em> 分享</li>
+						</ul>
+					</aside>
+					<aside class="rightAside fr">
+						<h3></h3>
+						<ul class="rightUl">
+							<li>专辑：<em></em></li>
+							<li>歌手：<em></em></li>
+							<li>专辑：<em></em></li>
+						</ul>
+						<div id="words">
+						</div>
+					</aside>
+				</div>
+				<div id="community">
+					<div class="drive"></div>
+					<div id="comBody">
+						<p><span>听友评论 </span>(已有<em>2</em>条评论)</p>
+						<input type="text" onfocus="this.blur()" id="comText" placeholder="发表评论"/>
+						<p class="goodCom">精彩评论</p>
+						<div class="drive2"></div>
+						<div class="coms">
+							<div class="comImg fl"></div>
+							<div class="comBox fl">
+								<p class="comDetail">
+									<em></em>
+									<span></span>
+								</p>
+								<span class="comDate comColor"></span>
+								<span class="fr comColor">👍点赞|分享|回复</span>
+							</div>
+						</div>
+						<div class="coms">
+							<div class="comImg fl"></div>
+							<div class="comBox fl">
+								<p class="comDetail">
+									<em></em>
+									<span></span>
+								</p>
+								<span class="comDate comColor"></span>
+								<span class="fr comColor">👍点赞|分享|回复</span>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div id="songList">
+				<div class="curList">当前歌单</div>
+				<div class="hisList choosen">历史记录</div>
+				<div id="listBox">
+					<ul class="listCtr">
+						<li class="fl songNum">共<em></em>首歌曲</li>
+						<li class="fr clearAll">清空</li>
+					</ul>
+					<ul class="songs"></ul>
+					<ul class="listCtr2">
+						<li class="fl songNum2">共<em></em>首歌曲</li>
+						<li class="fr clearAll2">清空</li>
+					</ul>
+					<ul class="hisongs"></ul>
+				</div>
+			</div>
+			<footer>
+				<ul id="footerUl">
+					<!-- 上一首 -->
+					<li class="last boot"><em><</em></li>
+					<!-- 播放暂停 -->
+					<li class="pause boot"><em>▲</em></li>
+					<!-- 下一首 -->
+					<li class="next boot"><em>></em></li>
+					<!-- 进度条 -->
+					<div id="curbar" class="fl" bar-content-after="" bar-content-before="0:00">
+						<input type="range" id="bar" value="0"  min="0" max="300"/>
+					</div>
+					<!-- 音量-->
+					<div id="volum" class="fl">
+						<span class="fl volumOff">🔈</span>
+						<input type="range" id="volumbar" value="1" min="0" max="1" step="0.1"/>
+					</div>
+					<!-- 循环方式 -->
+					<li class="loop sel">列表循环</li>
+					<!-- 歌单列表 -->
+					<li class="playlist sel">歌单</li>
+					<!-- 歌词 -->
+					<li class="words sel">歌词</li>
+				</ul>
+				<audio>
+					当前浏览器不支持audio
+				</audio>
+			</footer>
+			<div id="login">
+				<em>×</em>
+				<input type="text" class="btn1" id="username" placeholder="账户" />
+				<input type="text" class="btn2" id="password" placeholder="密码" />
+				<input type="checkbox" id="rempwd" class="remem"/><span>记住密码</span>
+				<button type="button" id="userLogin">登录</button>
+			</div>
+			<div id="comBox">
+				<span class="close">×</span>
+				<nav></nav>
+				<textarea rows="10" cols="50"></textarea>
+				<button type="button">评论</button>
+			</div>
+		</div>
+		<div id="colorPicker">
+			<canvas id="colorBox" width="500px" height="300px"></canvas>
+		</div>
+		<div id="zhuomian">网易云音乐</div>
+	</body>
+	<script type="text/javascript">		
+		var id = 1;//当前播放的音乐
+		var userId;
+		var judgePlay;
+		var angle=0;//旋转角度
+		var audio = document.getElementsByTagName("audio")[0];
+		var song,album,singer,source,url,cover,lyric,love,msg,lrcs;
+		var model = ['列表循环','单曲循环','随机播放','顺序播放'];
+		var mol = 0;
+		var start;
+		var lrcss;
+		var curtime;
+		var pic;
+		var loginCout = 0;
+		var open = false;
+		var skinColor = "#C20C0C";
+		var canvas = document.getElementById("colorBox");
+		var ctx = canvas.getContext('2d');
+		init();
+		initSongs();
+		getImg();
+		drawcolorPicker();
+		listChange();
+		//显示当前歌单
+		$('.curList').click(function(){
+			$('.hisongs').css("display","none");
+			$('.listCtr2').css("display","none");
+			$('.hisList').addClass("choosen");
+			$('.curList').removeClass("choosen");
+			$('.songs').css("display","block");
+			$('.listCtr').css("display","block");
+		})
+		//显示历史歌单
+		$('.hisList').click(function(){
+			$('.songs').css("display","none");
+			$('.listCtr').css("display","none");
+			$('.hisList').removeClass("choosen");
+			$('.curList').addClass("choosen");
+			$('.hisongs').css("display","block");
+			$('.listCtr2').css("display","block");
+		})
+		//清空歌单
+		$('.clearAll').click(function(){
+			if($('.songs').css("display") == "block"){
+				$('.songs').html("");
+				$('.songNum').children().eq(0).text("0");
+				zanting();
+			}else{
+				$('.hisongs').html("");
+				$('.songNum').children().eq(0).text("0");
+			}
+		})
+		//拖拽功能
+		$("#container>nav").mousedown(function(e) {
+			$(this).css("cursor","move");
+			// 当鼠标按下，获取鼠标位置
+			var mouseOldX = e.pageX;
+			var mouseOldY = e.pageY;
+			// 为鼠标添加移动事件
+			$(this).on("mousemove", function(e) {
+				// 当鼠标运动时获取鼠标的位置
+				var mouseNewX = e.pageX;
+				var mouseNewY = e.pageY;
+				// 计算鼠标移动的距离
+				var moveX = mouseNewX - mouseOldX; //x移动的距离
+				var moveY = mouseNewY - mouseOldY; //y移动的距离
+				//将新的鼠标位置保存
+				mouseOldX = mouseNewX;
+				mouseOldY = mouseNewY;
+				//将标签位置按照鼠标移动的距离进行移动
+				var divOldXY = $(this).offset();
+				$('#container').offset({
+					left: divOldXY.left + moveX,
+					top: divOldXY.top + moveY
+				})
+				//为鼠标添加抬起事件
+				$(this).on("mouseup mouseout", function() {
+					// 清除当前标签的鼠标移动事件
+					$(this).css("cursor","default");
+					$(this).off("mousemove");
+				});
+		
+			});
+		})
+		//展开调色板
+		$('.cover').click(function(){
+			var dis = $('#colorPicker');
+			if(dis.css("display") == "none") dis.css("display","block");
+		})
+		//鼠标在调色板上点击
+		$('#colorBox').mousedown(function(e){
+			var x = e.clientX;
+			var y = e.clientY;
+			var xx = $('#colorPicker').offset().left;
+			var yy = $('#colorPicker').offset().top;
+			if(x<xx) x=0;
+			else x-=xx;
+			if(y<yy) y=0;
+			else y-=yy;
+			var imgDate = ctx.getImageData(x,y,2,2);
+			skinColor = "rgb("+imgDate.data[0]+","+imgDate.data[1]+","+imgDate.data[2]+")";
+			$('#colorPicker').css("display","none");
+			changeColor();//改变主体颜色
+		})
+		//登录
+		$('#userLogin').click(function(){
+			loginCout++;
+			var isLogin = "未登录";
+			var username = $('#username').val();
+			var pwd = $('#password').val();
+			var checked = $('#rempwd').prop('checked');
+			for(var i=0;i<users.length;i++){
+				var user = users[i];
+				if(username == user.name){
+					if(pwd == user.pwd){
+						loginCout=0;
+						isLogin = "登录成功";
+						alert(isLogin);
+						pic = user.pic;
+						$('.regis').text("");
+						$('.regis').append('<img src="'+pic+'">'+username);
+						$('#login').css("display","none");
+						if(checked){
+							window.localStorage.setItem("username",username);
+							window.localStorage.setItem("pwd",pwd);
+						}else{
+							window.localStorage.removeItem('username');
+							window.localStorage.removeItem('pwd');
+						}
+						break;
+					}else{
+						isLogin = "密码错误";
+						alert(isLogin);
+						break;
+					}
+				}
+				if(pwd == user.pwd){
+					if(username != user.name && i == users.length-1) {
+						isLogin = "账号不存在";
+						alert(isLogin);
+						break;
+					}
+				}
+			}
+			if(isLogin == "未登录"){
+				isLogin = "账户和密码不正确";
+				alert(isLogin);
+			}
+			if(loginCout==3){
+				alert("您已经连续三次登录失败，请稍后再试");
+				$('#login').css("display","none");
+			}
+		})
+		//获取音频总时长
+		audio.oncanplaythrough = function(){
+			var time = audio.duration;
+			$('#bar').attr("max",time);
+			$('#curbar').attr("bar-content-after",formatSeconds(time));
+		}
+		//改变当前播放的时间
+		audio.ontimeupdate = function(){
+			var time = this.currentTime;
+			$('#bar').val(time);
+			$('#curbar').attr("bar-content-before",formatSeconds(time));
+			
+		}
+		$('#bar').mousedown(function(){
+			if(audio.pause()){
+				judgePlay = false;
+			}else{
+				judgePlay = true;
+			}
+		})
+		$('#bar').on("input",function(){
+			var curVal = $(this).val();//获取当前的位置
+			$('#curbar').attr("bar-content-before",formatSeconds(curVal));
+			//改变
+		})
+		$('#bar').change(function(){
+			var curVal = $(this).val();
+			audio.currentTime = curVal;
+			if(judgePlay){
+				if(start != undefined)	noSpin(); 
+				bofang();
+			}
+		})
+		//显示歌单
+		$('.playlist').click(function(){
+			var list = $('#songList');
+			if(list.css("display") == "none") list.css("display","block");
+			else list.css("display","none");
+		})
+		//点击歌单切歌
+		$('.songs li,.hisongs li').click(function(){
+			id = $(this).index()+1;
+			$('.songs li').css("color","#ddd");
+			$(this).css("color",skinColor);
+			init();
+			if(start != undefined)	noSpin(); 
+			bofang();
+		})
+		//暂停和播放
+		$('.pause').click(function(){
+			if($(this).text() == "||"){zanting();}
+			else {bofang();}
+		})
+		// 静音功能
+		$('.volumOff').click(function(){
+			if(audio.volume != "0"){
+				audio.volume = 0;
+				$('#volumbar').val(0);
+				$(this).css("opacity","0.4");
+			}else{
+				audio.volume = 0.4;
+				$(this).css("opacity","1");
+				$('#volumbar').val(0.4);
+			}
+		})
+		//拖动进度条改变音量
+		$('#volumbar').on("input",function(){
+			audio.volume = $(this).val();
+			if(audio.volume == 0){
+				$('.volumOff').css("opacity","0.4");
+			}else{
+				$('.volumOff').css("opacity","1");
+			}
+		})
+		$('.next').click(function(){nextSong();})//下一首
+		$('.last').click(function(){lastSong();})//上一首
+		//歌词滚动
+		$('audio').on('timeupdate',function(){
+			var ps = $('#words').children();
+			var sj = Math.ceil(audio.currentTime)-1;
+			for(var i=0;i<ps.length;i++){
+				if(sj == ps.eq(i).attr("time")){
+					ps.css({"color":"#000","font-size":"1em"});
+					ps.eq(i).css({"color":skinColor,"font-size":"1.2em"});
+					document.getElementById("words").scrollTop = i*30-100;	
+					$('#zhuomian').text(ps.eq(i).text());
+					break;
+				}
+			}
+		})
+		//打开歌词
+		$('.words').click(function(){
+			if(open){
+				open = false;
+				$(this).css("opacity","0.5");
+				$('#zhuomian').css("display","none");
+			}else{
+				open = true;
+				$(this).css("opacity","1");
+				$("#zhuomian").css("display","block");
+			}
+		})
+		//打开登录框
+		$('.regis').click(function(){
+			if($(this).text() == "登录") $('#login').css("display","block");
+		})
+		//关闭登录框
+		$('#login>em').click(function(){
+			$('#login').css("display","none");
+		})
+		//打开评论框
+		$('#comText').click(function(){
+			if($('.regis').text() != "登录"){
+				$('#comBox').css("display","block");
+				$('#comText').attr("select","selected");
+				$('#comBox>nav').text(song);
+			} 
+			else{
+				document.getElementById("main").scrollTop = 0;
+				$('#login').css("display","block");
+			}
+		})
+		//关闭评论框
+		$('.close').click(function(){
+			$('#comBox').css("display","none");
+		})
+		//提交评论
+		$('#comBox>button').click(function(){
+			var inf = $('#comBox>textarea').val();
+			$('#comBox').css("display","none");
+			addCom(inf);
+		})
+		//切换循环方式
+		$('.loop').click(function(){
+			$(this).text(model[mol]);
+			if(mol==3) mol=0;
+			else mol++;
+		})
+		audio.onended = function(){
+			switch(mol){
+				//列表循环
+				case 0:
+					id++;
+					if(id==5) id=1;
+					init();
+					bofang();
+					addList();
+					break;
+				// 单曲播放
+				case 1:
+					bofang();
+					break;
+				//随机播放
+				case 2:
+					id = parseInt(Math.random()*4);
+					init();
+					bofang();
+					break;
+				//顺序播放
+				case 3:
+					id++;
+					if(id<=4){
+						init();
+						bofang();
+					}else{
+						id--;
+						init();
+						bofang();
+					}
+					break;
+			}
+		}
+	</script>
+</html>
